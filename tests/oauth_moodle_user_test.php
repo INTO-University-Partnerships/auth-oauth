@@ -1,4 +1,5 @@
 <?php
+
 use Mockery as m;
 
 defined('MOODLE_INTERNAL') || die();
@@ -11,11 +12,11 @@ class oauth_moodle_user_test extends advanced_testcase {
      * @var oauth_moodle_user
      */
     protected $_cut;
+
     /**
-     * Time to represent now
+     * @var integer
      */
     protected $_now;
-
 
     /**
      * setUp
@@ -41,7 +42,7 @@ class oauth_moodle_user_test extends advanced_testcase {
     }
 
     /**
-     * @expectedException        moodle_exception
+     * @expectedException moodle_exception
      * @expectedExceptionMessage Unable to authenticate OAUTH user robologo
      */
     public function test_login_user_authenticate_fail() {
@@ -53,14 +54,14 @@ class oauth_moodle_user_test extends advanced_testcase {
                 $this->_now
             )
             ->andReturn(false);
-        $this->_cut->set_userdata((object) array(
-            'username' => 'robologo'
-        ));
+        $this->_cut->set_userdata((object)[
+            'username' => 'robologo',
+        ]);
         $this->_cut->login_user($moodle, $this->_now, 'username');
     }
 
     /**
-     * @expectedException        moodle_exception
+     * @expectedException moodle_exception
      * @expectedExceptionMessage Unable to retrieve user data following OAUTH authentication for user robologo
      */
     public function test_login_user_get_data_fail() {
@@ -76,22 +77,22 @@ class oauth_moodle_user_test extends advanced_testcase {
                 $user->username,
                 $this->_now
             )
-            ->andReturn((object) array(
+            ->andReturn((object)[
                 'id' => $user->id
-            ));
+            ]);
         $moodle->shouldReceive('get_complete_user_data')
             ->once()
             ->with('id', $user->id)
             ->andReturn(false);
 
-        $this->_cut->set_userdata((object) array(
+        $this->_cut->set_userdata((object)[
             'username' => $user->username
-        ));
+        ]);
         $this->_cut->login_user($moodle, $this->_now, 'username');
     }
 
     /**
-     * @expectedException        moodle_exception
+     * @expectedException moodle_exception
      * @expectedExceptionMessage Unable to complete user login after retrieving OAUTH data for user robologo
      */
     public function test_login_user_complete_login_fail() {
@@ -107,9 +108,9 @@ class oauth_moodle_user_test extends advanced_testcase {
                 $user->username,
                 $this->_now
             )
-            ->andReturn((object) array(
+            ->andReturn((object)[
                 'id' => $user->id
-            ));
+            ]);
 
         $moodle->shouldReceive('get_complete_user_data')
             ->once()
@@ -121,14 +122,14 @@ class oauth_moodle_user_test extends advanced_testcase {
             ->with($user)
             ->andReturn(false);
 
-        $this->_cut->set_userdata((object) array(
+        $this->_cut->set_userdata((object)[
             'username' => 'robologo'
-        ));
+        ]);
         $this->_cut->login_user($moodle, $this->_now, 'username');
     }
 
     /**
-     * Successful return of user object following login
+     * successful return of user object following login
      */
     public function test_login_user_success() {
         global $CFG;
@@ -145,9 +146,9 @@ class oauth_moodle_user_test extends advanced_testcase {
                 $user->username,
                 $this->_now
             )
-            ->andReturn((object) array(
+            ->andReturn((object)[
                 'id' => $user->id
-            ));
+            ]);
 
         $moodle->shouldReceive('get_complete_user_data')
             ->once()
@@ -162,11 +163,11 @@ class oauth_moodle_user_test extends advanced_testcase {
             ->with($user)
             ->andReturn($user_complete);
 
-        $this->_cut->set_userdata((object) array(
+        $this->_cut->set_userdata((object)[
             'username' => 'robologo'
-        ));
-        $user_loggedin = $this->_cut->login_user($moodle, $this->_now, 'username');
+        ]);
 
+        $user_loggedin = $this->_cut->login_user($moodle, $this->_now, 'username');
         $user_complete->loggedin = true;
         $user_complete->wwwroot = $CFG->wwwroot;
 
@@ -174,15 +175,15 @@ class oauth_moodle_user_test extends advanced_testcase {
     }
 
     /**
-     * Test set oauth tokens
+     * test set oauth tokens
      */
     public function test_set_oauth_tokens() {
         global $SESSION;
-        $tokens = array(
-            'expires_in' => 60 * 60, // 1 hour
+        $tokens = [
+            'expires_in'    => 60 * 60, // 1 hour
             'refresh_token' => 'TEST_REFRESH_TOKEN',
-            'access_token' => 'TEST_ACCESS_TOKEN',
-        );
+            'access_token'  => 'TEST_ACCESS_TOKEN',
+        ];
         $now = time();
         $this->_cut->set_session_tokens((object) $tokens, $now);
         $this->assertObjectHasAttribute('oauth_tokens', $SESSION);
@@ -192,22 +193,22 @@ class oauth_moodle_user_test extends advanced_testcase {
     }
 
     /**
-     * Test get oauth token
+     * test get oauth token
      */
     public function test_get_oauth_tokens() {
         global $SESSION;
-        $SESSION->oauth_tokens = (object) array(
-            'expires_in' => 60 * 60, // 1 hour
+        $SESSION->oauth_tokens = (object)[
+            'expires_in'    => 60 * 60, // 1 hour
             'refresh_token' => 'TEST_REFRESH_TOKEN',
-            'access_token' => 'TEST_ACCESS_TOKEN',
-            'expiry_time' => time()
-        );
+            'access_token'  => 'TEST_ACCESS_TOKEN',
+            'expiry_time'   => time(),
+        ];
         $tokens = $this->_cut->get_session_tokens();
         $this->assertEquals($tokens, $SESSION->oauth_tokens);
     }
 
     /**
-     * User data is set statically, so that Moodle can access it from different instances of the same class
+     * user data is set statically, so that Moodle can access it from different instances of the same class
      */
     public function test_userdata() {
         $user = new stdClass();
@@ -216,8 +217,10 @@ class oauth_moodle_user_test extends advanced_testcase {
         $user->lastname = 'Luxemburg';
         $this->_cut->set_userdata($user);
         $this->assertEquals($user, $this->_cut->get_userdata());
+
         unset($this->_cut);
         $this->_cut = new oauth_moodle_user();
         $this->assertEquals($user, $this->_cut->get_userdata());
     }
+
 }

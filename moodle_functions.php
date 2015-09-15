@@ -1,4 +1,5 @@
 <?php
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -8,13 +9,12 @@ defined('MOODLE_INTERNAL') || die();
 class moodle_functions {
 
     /**
-     * Attached functions
      * @var array
      */
-    protected $_attached = array();
+    protected $_attached = [];
 
     /**
-     * Attach a function
+     * attach a function
      * @param string $name
      * @param callable $method
      */
@@ -25,19 +25,20 @@ class moodle_functions {
     }
 
     /**
-     * Call functions that have been attached or, failing that, a global function
+     * call functions that have been attached or, failing that, a global function
+     * @throws moodle_exception
      * @param string $name
      * @param array $fargs
      * @return mixed
-     * @throws moodle_exception
      */
     public function __call($name, $fargs) {
         if (array_key_exists($name, $this->_attached)) {
             return call_user_func_array($this->_attached[$name], $fargs);
         }
         if (!function_exists($name)) {
-            throw new moodle_exception('No such global function '.$name);
+            throw new moodle_exception('No such global function ' . $name);
         }
         return call_user_func_array($name, $fargs);
     }
+
 }

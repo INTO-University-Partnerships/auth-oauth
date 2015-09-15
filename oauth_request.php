@@ -1,35 +1,38 @@
 <?php
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
  * Makes requests to an oauth provider - either browser redirects or server requests
- * Class oauth
  */
 class oauth_request {
 
+    /**
+     * c'tor
+     */
     public function __construct() {
-
+        // empty
     }
 
     /**
-     * Redirect to request an authorization code from the provider
+     * redirect to request an authorization code from the provider
      * @param stdClass $provider
      * @param moodle_functions $m
      * @param string $state
      */
     public function request_authorization_code($provider, moodle_functions $m, $state) {
-        $params = array(
-            'client_id' => $provider->client_id,
-            'response_type' => 'code',
+        $params = [
+            'client_id'       => $provider->client_id,
+            'response_type'   => 'code',
             'approval_prompt' => 'skip',
-            'state' => $state
-        );
-        $url = $provider->authorize_url . "?" . http_build_query($params);
+            'state'           => $state,
+        ];
+        $url = $provider->authorize_url . '?' . http_build_query($params);
         $m->redirect($url);
     }
 
     /**
-     * Redirect to request logout from the provider
+     * redirect to request logout from the provider
      * @param stdClass $provider
      * @param moodle_functions $m
      */
@@ -39,7 +42,7 @@ class oauth_request {
     }
 
     /**
-     * Make an access token request
+     * make an access token request
      * @param \GuzzleHttp\Client $client
      * @param stdClass $provider
      * @param string $code
@@ -47,48 +50,47 @@ class oauth_request {
      * @return mixed
      */
     public function access_token_request(\GuzzleHttp\Client $client, $provider, $code, $redirect_uri) {
-
-        $params = array(
-            'client_id' => $provider->client_id,
+        $params = [
+            'client_id'     => $provider->client_id,
             'client_secret' => $provider->client_secret,
-            'code' => $code,
-            'redirect_uri' => $redirect_uri,
-            'grant_type' => 'authorization_code'
-        );
+            'code'          => $code,
+            'redirect_uri'  => $redirect_uri,
+            'grant_type'    => 'authorization_code',
+        ];
         $request = $client->createRequest(
             'POST',
             $provider->token_url
         );
         $request->setQuery($params);
         $response = $client->send($request);
-        return (object) $response->json();
+        return (object)$response->json();
     }
 
     /**
-     * Uses a refresh token, to retrieve a new access token
+     * uses a refresh token, to retrieve a new access token
      * @param \GuzzleHttp\Client $client
      * @param stdClass $provider
-     * @param $refresh_token
+     * @param string $refresh_token
      * @return object
      */
     public function refresh_access_token_request(\GuzzleHttp\Client $client, $provider, $refresh_token) {
-        $params = array(
-            'client_id' => $provider->client_id,
+        $params = [
+            'client_id'     => $provider->client_id,
             'client_secret' => $provider->client_secret,
             'refresh_token' => $refresh_token,
-            'grant_type' => 'refresh_token'
-        );
+            'grant_type'    => 'refresh_token',
+        ];
         $request = $client->createRequest(
             'POST',
             $provider->token_url
         );
         $request->setQuery($params);
         $response = $client->send($request);
-        return (object) $response->json();
+        return (object)$response->json();
     }
 
     /**
-     * Makes a bearer api request, when given an endpoint and an access token
+     * makes a bearer api request, when given an endpoint and an access token
      * @param \GuzzleHttp\Client $client
      * @param string $endpoint
      * @param string $access_token
@@ -99,16 +101,16 @@ class oauth_request {
             'GET',
             $endpoint
         );
-        $request->setHeader('Authorization', "Bearer " . $access_token);
+        $request->setHeader('Authorization', 'Bearer ' . $access_token);
         $response = $client->send($request);
-        return (object) $response->json();
+        return (object)$response->json();
     }
 
     /**
      * @param \GuzzleHttp\Client $client
      * @param stdClass $provider
      * @param oauth_moodle_user $user
-     * @param int $now
+     * @param integer $now
      */
     public function refresh_session_tokens_if_expired(\GuzzleHttp\Client $client, stdClass $provider, oauth_moodle_user $user, $now) {
         global $SESSION;
@@ -118,4 +120,5 @@ class oauth_request {
             $user->set_session_tokens($tokens, $now);
         }
     }
+
 }
